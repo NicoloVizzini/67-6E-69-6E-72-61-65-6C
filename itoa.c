@@ -18,21 +18,29 @@ char toHexDigit(int n) {
     char * itoa(int number,int base){//doesent work with freeze, allocates a lot of space more to handle lower bases using more digits
     //Buffer allocation
     int is_negative = 0; //I need to handle the partial 
-    int digits_number = 34;
-    char *buf = malloc(digits_number);
+    int digits_number = 33;
+    char buf[digits_number];
     int digits;
-    int i = digits_number -1 ;
+    int i = digits_number - 1 ;
     if (number == INT_MIN){
-        if (base == 2)
-            strcpy(buf,"-10000000000000000000000000000000");
-        if (base == 8)
-            strcpy(buf,"-20000000000");
-        if (base == 10)
-            strcpy(buf, "-2147483648");//I discovered the existence of this by asking chat gpt questions
-        if(base==16)
-            strcpy(buf,"-80000000");
-
-        return buf;                  
+        char * return_buffer = NULL;
+        if (base == 2){
+	       return_buffer = malloc(34);		 
+            strcpy(return_buffer,"-10000000000000000000000000000000");
+									}
+        if (base == 8){
+	        return_buffer = malloc(13);
+            strcpy(return_buffer,"-20000000000");
+        }
+        if (base == 10){
+	        return_buffer = malloc(12);
+            strcpy(return_buffer, "-2147483648");
+}//I discovered the existence of this by asking chat gpt questions
+        if(base==16){
+	        return_buffer = malloc(10);
+            strcpy(return_buffer,"-80000000");
+}
+        return return_buffer;                  
     }
     buf[i--] = '\0';
 
@@ -41,8 +49,10 @@ char toHexDigit(int n) {
         number = -number;//Today I learnt complement 2 notation
     }
     if (number == 0) {
-        buf[i] = '0';
-        return buf + i;//I dont do a + 1 because I'm not decrementing i here
+       char *return_buffer = malloc(2); // one char + '\0'
+       return_buffer[0] = '0';
+       return_buffer[1] = '\0';
+       return return_buffer;
     }
     while (number > 0){
         digits = number % base;
@@ -55,9 +65,14 @@ char toHexDigit(int n) {
     }
     if (is_negative){
         buf[i--] = '-';
+        //printf("aaa %d",i);
+        
     }
-
-  return buf + i + 1;
+  int actual_size = digits_number - i - 1;
+  //printf("debug, actual size %d, i %d\n",actual_size,i);
+  char *return_buffer = malloc(actual_size);
+  memcpy(return_buffer, buf+i+1, actual_size);
+  return return_buffer;
 
 }
 int main(){
@@ -70,7 +85,9 @@ int main(){
         {123, 10, "123"},
         {-456, 10, "-456"},
         {INT_MAX, 10, "2147483647"},
+        {-2147483647, 10, "-2147483647"},
         {INT_MIN, 10, "-2147483648"},
+        
 
         // Hexadecimal
         {0, 16, "0"},
@@ -92,6 +109,9 @@ int main(){
         {-5, 2, "-101"},
         {INT_MAX, 2, "1111111111111111111111111111111"},
         {INT_MIN, 2, "-10000000000000000000000000000000"},
+        {INT_MIN + 1, 2, "-1111111111111111111111111111111"},
+        {INT_MIN + 2, 2, "-1111111111111111111111111111110"},
+
     };
     int n_tests = sizeof(tests)/sizeof(TestCase);
     int failures = 0;
@@ -107,6 +127,7 @@ int main(){
             printf("Test %d PASSED: input=%d, base=%d -> '%s'\n",
                    i, tests[i].input, tests[i].base, result);
         }
+        free(result);
     }
 
     if(failures == 0)
