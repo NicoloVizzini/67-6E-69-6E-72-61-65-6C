@@ -153,7 +153,7 @@ int main(int argc, char **argv)
     //printf("debug i %d\n",i);
     if(!flags[flag_e])
         for(i; i < argc; i++) {
-            printf("%s ", argv[i]);
+            printf("%s", argv[i]);
         }
     else 
         parse_escapes(argc, argv, i);
