@@ -16,18 +16,25 @@
     \0NNN  byte with octal val
 */
 
-enum Flags {flag_n, flag_e};
-int check_flags (int argc, char **argv, int *i, int *flags){
+//enum Flags {flag_n, flag_e}; //This was a one liner 
+
+
+typedef struct {
+    bool e;
+    bool n;
+} Flags;
+
+int check_flags (int argc, char **argv, int *i, Flags *flags){
     //printf("inside check flags\n");
     while(*i < argc){ //I read about get ops but if I used it you would make me implement it
         if (strcmp(argv[*i], "-n") == 0) {
             (*i)++; //yes before fixing I did *i++, yes I discovered the precedence of ++
-            flags[flag_n] = 1;
+            flags -> n = true;
             break;
         }
         if (strcmp(argv[*i], "-e") == 0) {
             (*i)++; 
-            flags[flag_e] = 1;
+            flags -> e = true;
             break;
         }
         else
@@ -39,126 +46,142 @@ int check_flags (int argc, char **argv, int *i, int *flags){
 }
 void parse_escapes(int argc, char** argv,int i){
     char c;
-    while(i < argc){
-       // printf("debug i %d",i);
-        for(int j = 0; j< strlen(argv[i]);){
-            int increment = 1;
-            //printf("debug j%d\n",j);
-            c = argv[i][j];
+    const char *p = argv[i];
+    while(c = *p++){
+            char escape = *p;
             if (c == '\\') {
-                if (j + 1 >= strlen(argv[i])){
+                if (escape == '\0'){
                     printf("\\");
                     break;
                 }
-                char escape = argv[i][++j];
                 //printf("here before the switch");
                 switch(escape){
-                    case '\\': 
+                    case '\\':
+                        putchar('\\');
+                        p++;
+                        break;
                     case 'a':   
-                        printf("\a");
+                        putchar('\a');
+                        p++;
                         break;
                     case 'b':   
-                        printf("\b");
+                        putchar('\b');
+                        p++;
                         break;
                     case 'c':  
                         exit(0);
                     case 'e':   
-                        printf("\e");
+                        putchar('\e');
+                        p++;
                         break;
                     case 'f': 
-                        printf("\f");
+                        putchar('\f');
+                        p++;
                         break;
                     case 'n':   
-                        //printf("ca");
-                        printf("\n");
+                        putchar('\n');
+                        p++;
                         break;
                     case 'r':   
-                        printf("\r");
+                        putchar('\r');
+                        p++;
                         break;
                     case 't':   
-                        printf("\t");
+                        putchar('\t');
+                        p++;
                         break;
                     case 'v':   
-                        printf("\v");
+                        putchar('\v');
+                        p++;
                         break;
                     case '0':   {
                         int count = 0;
                         int val = 0;
-                        for (count = 0; count < 3 && j+1+count < strlen(argv[i]); count++) {
-                            char o = argv[i][j+1+count];
-                            if (o >= '0' && o <= '7') {
-                                val = val * 8 + (o - '0');
-                            } else {
-                                break;  
+                        const char *next = p;
+                        next ++;
+
+                        for (;count < 3  && *next >= '0' && *next <= '7';count++) {
+    
+                                val = val * 8 + (*next - '0');
+                                next++;
+                                p++;
                             }
-                        }
+                       // printf("%d",count);
+                        if(count > 0){
                             printf("%c", val);
-                            increment += count;  
-                            break;
+                            p++;
+                        }
+                        break;
+
+                        
                     }
                     case 'x':  {
                         //printf("here exa");
                         int count = 0;
                         int val = 0;
-                    for (count = 0; count < 2 && j+1+count < strlen(argv[i]); count++) {
-                            char x = argv[i][j+1+count];
+                        const char *next = p;
+                        next ++;
+                    for (;count < 2;count++ ) {
 
-                            if (x >= '0' && x <= '9') {
-                                val = val*16 + (x - '0');
+                            if (*next >= '0' && *next<= '9') {
+                                val = val*16 + (*next - '0');
+                                next ++;
+                                p ++;
                             } 
-                            else if (x >= 'a' && x <= 'f') {
-                                val = val*16 + (x - 'a' + 10);
-                            } 
-                            else if (x >= 'A' && x <= 'F') {
-                                val = val*16 + (x - 'A' + 10);
+                            else if (*next >= 'a' && *next <= 'f') {
+                                val = val*16 + (*next - 'a' + 10);
+                                next ++;
+                                p ++;
+                            }
+                            else if (*next>= 'A' && *next <= 'F') {
+                                val = val*16 + (*next - 'A' + 10);
+                                next ++;
+                                p ++;
                             } 
                             else {
                                 break; 
                             }
                         }
 
-                    printf("%c", val);
-                    increment += count; 
+                    if(count > 0){
+                        printf("%c", val);
+                        p++;
                     break;
                     }
+                }
                
                 default:
-
-                    printf("\\%c",argv[i][j]);
+                    printf("\\%c",c);
            
                 }
            
-            //printf("here now j is %d",j);
-            j += increment;
-            //printf("here after increment now j is %d",j);
+        
 
             }  
             else{
-                printf("%c",argv[i][j]); 
-                j++;
+                printf("%c",c) ;
+               
                 
             }
                 }   
-                i++;
                     }
 
-                        }
 
 int main(int argc, char **argv)
 {
     int i = 1;
-    int flags[2] = {0};
+    Flags f = { false, false };
     if(argc > 1 && argv[1][0] == '-')
-        check_flags(argc, argv, &i, flags);
+        check_flags(argc, argv, &i, &f);
     //printf("debug i %d\n",i);
-    if(!flags[flag_e])
+    if(!f.e)
         for(i; i < argc; i++) {
             printf("%s", argv[i]);
         }
     else 
         parse_escapes(argc, argv, i);
 
-    if(flags[flag_n] == 0)
+    if(!f.n )
         printf("\n");
 
 }
